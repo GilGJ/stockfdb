@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Gsneakerzz</title>
+    <style>
+        /* Estilo general */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: black;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="checkbox"] {
+            margin-top: 10px;
+        }
+        button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        .tenis-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .tenis-item img {
+            max-width: 100px;
+            max-height: 100px;
+            margin-right: 10px;
+        }
+        .tenis-item p {
+            margin: 5px 0;
+            flex: 1;
+        }
+        .tenis-item button {
+            flex-grow: 0;
+            margin-left: 10px;
+        }
+        .tenis-item button.borrar {
+            background-color: #d9534f;
+            color: white;
+        }
+        .tenis-item button.borrar:hover {
+            background-color: #c9302c;
+        }
+        #resultadosBusqueda .tenis-item {
+            background-color: #eef;
+        }
+        .negrita {
+            font-weight: bold;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stock Gsneakerzz</h1>
+    <div>
+        <h2>Agregar Tenis</h2>
+        <div class="form-group">
+            <label>URL de la Imagen:</label>
+            <input type="text" id="imagenUrl" />
+        </div>
+        <div class="form-group">
+            <label>SKU:</label>
+            <input type="text" id="sku" />
+        </div>
+        <div class="form-group">
+            <label>Precio Retail:</label>
+            <input type="number" id="precioRetail" />
+        </div>
+        <div class="form-group">
+            <label>Precio de Reventa:</label>
+            <input type="number" id="precioReventa" />
+        </div>
+        <div class="form-group">
+            <label>Talla:</label>
+            <input type="number" id="talla" />
+        </div>
+        <div class="form-group">
+            <label>Disponibilidad:</label>
+            <input type="checkbox" id="disponibilidad" />
+        </div>
+        <button onclick="agregarOEditarTenis()">Agregar/Editar Tenis</button>
+    </div>
+    <div id="listaTenis">
+        <h2>Tenis Agregados</h2>
+    </div>
+    <div>
+        <h2>Buscar par por Talla</h2>
+        <select id="buscadorTalla">
+            <option value="">Seleccione una Talla</option>
+            <option value="22">22 cm</option>
+            <option value="22.5">22.5 cm</option>
+            <option value="23">23 cm</option>
+            <option value="23.5">23.5 cm</option>
+            <option value="24">24 cm</option>
+            <option value="24.5">24.5 cm</option>
+            <option value="25">25 cm</option>
+            <option value="25.5">25.5 cm</option>
+            <option value="26">26 cm</option>
+            <option value="26.5">26.5 cm</option>
+            <option value="27">27 cm</option>
+            <option value="27.5">27.5 cm</option>
+            <option value="28">28 cm</option>
+            <option value="28.5">28.5 cm</option>
+            <option value="29">29 cm</option>
+            <option value="29.5">29.5 cm</option>
+            <option value="30">30 cm</option>
+            <option value="30.5">30.5 cm</option>
+            <option value="31">31 cm</option>
+        </select>
+        <button onclick="buscarPorTalla()">Buscar</button>
+        <div id="resultadosBusqueda"></div>
+    </div>
+    <script>
+        const API_URL = 'http://localhost/gsneakerzz-backend/tenis.php';
+        let tenis = []; // Lista de tenis cargados desde el backend
+        let indiceEdicion = -1; // Índice del tenis en edición
+    
+        async function cargarDatos() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Error al cargar datos');
+                tenis = await response.json();
+                mostrarTenis();
+            } catch (error) {
+                console.error('Error al cargar los tenis:', error);
+            }
+        }
+    
+        async function agregarOEditarTenis() {
+            const tenisData = {
+                imagenUrl: document.getElementById('imagenUrl').value,
+                sku: '', // Valor predeterminado si SKU no se usa
+                precioRetail: 0, // Valor predeterminado si Precio Retail no se usa
+                precioReventa: parseFloat(document.getElementById('precioReventa').value),
+                talla: parseFloat(document.getElementById('talla').value),
+                disponibilidad: document.getElementById('disponibilidad').checked,
+            };
+
+    
+            try {
+                const method = indiceEdicion >= 0 ? 'PUT' : 'POST';
+                const url = indiceEdicion >= 0 ? `${API_URL}?id=${tenis[indiceEdicion].id}` : API_URL;
+    
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(tenisData),
+                });
+    
+                if (!response.ok) throw new Error('Error al guardar el tenis');
+                cargarDatos(); // Recargar los datos
+                indiceEdicion = -1; // Restablecer el índice de edición
+                limpiarFormulario();
+            } catch (error) {
+                console.error('Error al guardar el tenis:', error);
+            }
+        }
+    
+        function limpiarFormulario() {
+            document.getElementById('imagenUrl').value = '';
+            document.getElementById('sku').value = '';
+            document.getElementById('precioRetail').value = '';
+            document.getElementById('precioReventa').value = '';
+            document.getElementById('talla').value = '';
+            document.getElementById('disponibilidad').checked = false;
+            indiceEdicion = -1; // Salir del modo edición
+        }
+    
+        function mostrarTenis() {
+            const listaTenis = document.getElementById('listaTenis');
+            listaTenis.innerHTML = '<h2>Tenis Agregados</h2>';
+    
+            tenis.forEach((t, index) => {
+                const item = `
+                    <div class="tenis-item">
+                        <img src="${t.imagen_url}" alt="Imagen">
+                        <p class="negrita">Talla: ${t.talla}</p>
+                        <p>Precio Retail: $${t.precio_retail}</p>
+                        <p class="negrita">Precio Reventa: $${t.precio_reventa}</p>
+                        <button onclick="editarTenis(${index})">Editar</button>
+                        <button class="borrar" onclick="borrarTenis(${index})">Borrar</button>
+                    </div>`;
+                listaTenis.innerHTML += item;
+            });
+        }
+    
+        function editarTenis(index) {
+            const tenisSeleccionado = tenis[index];
+            document.getElementById('imagenUrl').value = tenisSeleccionado.imagen_url;
+            document.getElementById('sku').value = tenisSeleccionado.sku;
+            document.getElementById('precioRetail').value = tenisSeleccionado.precio_retail;
+            document.getElementById('precioReventa').value = tenisSeleccionado.precio_reventa;
+            document.getElementById('talla').value = tenisSeleccionado.talla;
+            document.getElementById('disponibilidad').checked = tenisSeleccionado.disponibilidad;
+            indiceEdicion = index; // Establecer el índice para editar
+        }
+    
+        async function borrarTenis(index) {
+            const id = tenis[index].id;
+            try {
+                const response = await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error('Error al borrar');
+                cargarDatos();
+            } catch (error) {
+                console.error('Error al borrar:', error);
+            }
+        }
+    
+        async function buscarPorTalla() {
+            const talla = parseFloat(document.getElementById('buscadorTalla').value);
+            const resultadosDiv = document.getElementById('resultadosBusqueda');
+            resultadosDiv.innerHTML = '<h2>Resultados de Búsqueda</h2>';
+    
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Error al buscar');
+    
+                const data = await response.json();
+                const resultados = data.filter(t => parseFloat(t.talla) === talla);
+    
+                if (resultados.length === 0) {
+                    resultadosDiv.innerHTML += '<p>No se encontraron resultados.</p>';
+                    return;
+                }
+    
+                resultados.forEach(t => {
+                    resultadosDiv.innerHTML += `
+                        <div class="tenis-item">
+                            <img src="${t.imagen_url}" alt="Imagen">
+                            <p>Talla: ${t.talla}</p>
+                            <p>Precio Retail: $${t.precio_retail}</p>
+                            <p>Precio Reventa: $${t.precio_reventa}</p>
+                        </div>`;
+                });
+    
+            } catch (error) {
+                console.error('Error en búsqueda:', error);
+            }
+        }
+    
+        cargarDatos(); // Cargar datos al iniciar
+    </script>
+</body>
+</html>
